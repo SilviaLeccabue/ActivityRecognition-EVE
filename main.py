@@ -44,13 +44,7 @@ def test(opt, model, data_loader, device):
 
 		accuracy = (correct/len(data_loader.dataset))*100
 		print(' Single Window Prediction Accuracy: {:.1f}%'.format(accuracy))
-	# 		total += targets.size(0)
-	# 		correct += (predicted == labels).sum().item()
-	# 	test_accuracy = 100 * correct // total
-
-	# # show info
-	# print('Test set ({:d} samples): Acc: {:.4f}%'.format(len(data_loader.dataset), test_accuracy))
-
+	
 
 def main_worker():
 	opt = parse_opts()
