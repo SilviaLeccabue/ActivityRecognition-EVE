@@ -11,40 +11,7 @@ from opts import parse_opts
 from model import generate_model
 from torch.optim import lr_scheduler
 from eve_sequence import *
-from utils import AverageMeter, calculate_accuracy
-
-
-def test(opt, model, data_loader, device):
-	# checkpoint = torch.load(opt.resume_path)
-	# print(checkpoint)
-	model=generate_model(opt, device)
-	model.load_state_dict(torch.load('tf_logs/cnnlstm-Epoch-10-Loss-2.255442947894335.pth')['state_dict'])
-	print("Model Restored from Epoch {}".format(torch.load('tf_logs/cnnlstm-Epoch-10-Loss-2.255442947894335.pth')['epoch']))
-	prdY = []
-	model.eval()
-	with torch.no_grad():
-		for (data, targets) in data_loader:
-			data = np.transpose(data, (0, 2 , 1, 3, 4))
-			data, targets = data.to(device), targets.to(device)
-			outputs = model(data) 
-			# targets = targets.float()        
-			_, predicted = torch.max(outputs.data, 1)
-			# save the predictions
-			predictions_npy = predicted.data.cpu().detach().numpy()  
-			if(len(prdY) >0):
-				prdY = np.concatenate((prdY, predictions_npy))
-			else:
-				prdY = predictions_npy
-		
-		prdY = prdY.reshape(-1, 1)
-		
-		print(prdY.shape)
-		print(targets.shape)
-		correct = (targets == prdY).sum()
-
-		accuracy = (correct/len(data_loader.dataset))*100
-		print(' Single Window Prediction Accuracy: {:.1f}%'.format(accuracy))
-	
+from utils import AverageMeter, calculate_accuracy	
 
 def main_worker():
 	opt = parse_opts()
@@ -85,12 +52,7 @@ def main_worker():
 	weights = [ 0.49962648,  1.11133267, 10.13333333]
 	class_weights = torch.FloatTensor(weights).cuda()
 	criterion = nn.CrossEntropyLoss(weight=class_weights, reduction='mean')
-	# resume model
-	# if opt.resume_path:
-	# 	start_epoch = resume_model(opt, model, optimizer)
-	# else:
-	# 	start_epoch = 1
-	start_epoch = 1
+
 	
 	# start training
 	for epoch in range(start_epoch, opt.n_epochs + 1):
@@ -105,9 +67,11 @@ def main_worker():
 			state = {'epoch': epoch, 'state_dict': model.state_dict(), 'optimizer_state_dict': optimizer.state_dict()}
 			torch.save(state, os.path.join('tf_logs', f'{opt.model}-Epoch-{epoch}-Loss-{val_loss}.pth'))
 			print("Epoch {} model saved!\n".format(epoch))
-	#test(opt, model, test_loader, device )
+	
 	
 		
 
 if __name__ == "__main__":
+	
 	main_worker()
+	test_epoch()
